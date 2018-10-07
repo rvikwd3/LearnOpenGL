@@ -2,7 +2,7 @@
 #include<iostream>
 #include<string>
 
-std::string readTextFile(const char* filename){
+std::string readTextFile(const char* filename){/*{{{ */
 		std::ifstream file(filename);
 		std::string str;
 		std::string file_contents;
@@ -22,13 +22,13 @@ std::string readTextFile(const char* filename){
 		}
 
 		return file_contents;
-}
+}/*}}}*/
 
-int main(){
+int main(){                                    /*{{{ */
 		std::string test;
 		test = readTextFile("vertexShaderSource.glsl");
 
 		std::cout << "[MAIN]\tContents:\n" << test <<  std::endl;
 
 		return 0;
-}
+}/*}}}*/

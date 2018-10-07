@@ -7,12 +7,14 @@
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 800
 
+void processInput(GLFWwindow* window);
 void glfw_error(int error, const char* description);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 std::string readTextFile(const char*);
 
 int main(){
-	/*	Setup & OpenGL Context Creation {{{ 
-	 *	================================================================== */
+/*	Setup & OpenGL Context Creation                                           {{{
+*	================================================================== */
 
 	std::cout << "Main initialized()" << std::endl;
 
@@ -32,8 +34,8 @@ int main(){
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	//glfw:	window creation
-	//---------------------
+	// glfw:	window creation
+	// ------------------------
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL){
 			std::cout << "Failed to create GLFW window" << std::endl;
@@ -43,15 +45,22 @@ int main(){
 
 	glfwMakeContextCurrent(window);
 
-	//glad:	load all OpenGL function pointers
-	//---------------------------------------
+	// glad:	load all OpenGL function pointers
+	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
 			std::cout << "Failed to initialize GLAD" << std::endl;
 			return -1;
 	}
 	
-	/* ==================================================================
-	 * Setup end }}}				*/
+	// glad: set window size
+	// ---------------------
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+	//resize viewport on window resize
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+/* ==================================================================
+* Setup end }}}*/
 	
 	// Vertex array
 	// ------------
@@ -61,10 +70,15 @@ int main(){
 		0.0f,	0.5f,	0.0f
 	};
 
-	// Vertex Buffer Object
+	// Vertex Array Object & Vertex Buffer Object
 	// --------------------
-	unsigned int VBO;
+	unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+
+    // Bind VAO vertex array
+    // ---------------------
+    glBindVertexArray(VAO);
 
 	// Bind VBO to target GL_ARRAY_BUFFER
 	// ---------------------_-----_------
@@ -78,8 +92,8 @@ int main(){
 				GL_STATIC_DRAW
 	);
 
-	/*	Vertex Shader {{{ 
-	 *	================================================================== */
+/*	Vertex Shader                                                             {{{
+*	================================================================== */
 
 	// Prepare vertex shader source
 	std::string str;
@@ -102,13 +116,15 @@ int main(){
 	if(!success){
 			glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}else{
+			std::cout << "\nVertex Shader successfully compiled\n";
 	}
 	
-	/*	================================================================== 
-	*	Vertex Shader end }}} */
+/*	================================================================== 
+*	Vertex Shader end }}} */
 	
-	/*	Fragment Shader {{{
-	 *	================================================================== */
+/*	Fragment Shader                                                           {{{
+*	================================================================== */
 	
 	// Prepare fragment shader source
 	str = readTextFile("fragmentShaderSource.glsl");
@@ -123,22 +139,100 @@ int main(){
 
 	// Check for shader compile errors
 	// -------------------------------
-	int success;
-	char infoLog[512];
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 	if(!success){
 			glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}else{
+			std::cout << "\nFragment Shader successfully compiled\n";
 	}
 
-	/*	================================================================== 
-	*	Fragment Shader end }}} */
+/*	================================================================== 
+*	Fragment Shader end }}} */
 
+/*	Shader Program                                                            {{{
+*	================================================================== */
+
+	// Prepare shader program
+	// ----------------------
+	unsigned int shaderProgram;
+	shaderProgram = glCreateProgram();
+
+	// Link vertex & fragment shader
+	// -----------------------------
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
+	// Check if linking failed
+	// -----------------------
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if(!success){
+			glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+			std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
+	}else{
+			std::cout << "\nShader Program successfully compiled\n";
+	}
+
+/*	================================================================== 
+*	Shader Program end }}} */
+
+	// Delete shader objects after being linked
+	// ----------------------------------------
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	// Interpret VBO buffer data as vertices
+	// -------------------------------------
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+    // Safely unbind VBO as array buffer & unbind VAO (optional)
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+
+/*	RENDER LOOP                                                               {{{
+*	================================================================== */
+
+	while(!glfwWindowShouldClose(window)){
+			// input
+			// -----
+			processInput(window);
+
+			// clear color buffer
+			// ------------------
+			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			// use shader program
+			// ------------------
+			glUseProgram(shaderProgram);
+            glBindVertexArray(VAO);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+			// glfw:	draw buffer and poll IO events
+			// ---------------------------------------
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+	}
+/*	================================================================== 
+*	Render Loop End }}} */
+
+    // Deallocate resources
+    // --------------------
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glfwTerminate();
+
+
+	std::cout << "\n----------------------------------------------------------\
+			\nSuccessfully exited\n";
 
 	return 0;
 }
 
-std::string readTextFile(const char* filename){ //{{{
+std::string readTextFile(const char* filename){ //                           {{{
 		std::ifstream file(filename);
 		std::string str;
 		std::string file_contents;
@@ -160,9 +254,23 @@ std::string readTextFile(const char* filename){ //{{{
 		return file_contents;
 } //}}}
 
+// process all input: query GLFW wheter relevant keys are pressed
+// --------------------------------------------------------------
+void processInput(GLFWwindow *window){ //                                    {{{
+		if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
+				std::cout << "Escape key pressed" << std::endl;
+				glfwSetWindowShouldClose(window, true);
+		}
+} //}}}
+
 // error callback 
 // --------------
-void glfw_error(int error, const char* description){ //{{{
+void glfw_error(int error, const char* description){ //                      {{{
 	fputs(description, stderr);
 } //}}}
 
+// resize window: resize glad viewport according to window size
+// ------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height){ //{{{
+	glViewport(0, 0, width, height);
+} //}}}
