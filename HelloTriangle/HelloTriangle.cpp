@@ -51,7 +51,7 @@ int main(){
 			std::cout << "Failed to initialize GLAD" << std::endl;
 			return -1;
 	}
-	
+
 	// glad: set window size
 	// ---------------------
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -61,7 +61,7 @@ int main(){
 
 /* ==================================================================
 * Setup end }}}*/
-	
+
 	// Vertex array
 	// ------------
 	float vertices[]= {
@@ -88,7 +88,7 @@ int main(){
 	// -------------------------
 	glBufferData(GL_ARRAY_BUFFER,
 				sizeof(vertices),
-				vertices, 
+				vertices,
 				GL_STATIC_DRAW
 	);
 
@@ -119,13 +119,13 @@ int main(){
 	}else{
 			std::cout << "\nVertex Shader successfully compiled\n";
 	}
-	
-/*	================================================================== 
+
+/*	==================================================================
 *	Vertex Shader end }}} */
-	
+
 /*	Fragment Shader                                                           {{{
 *	================================================================== */
-	
+
 	// Prepare fragment shader source
 	str = readTextFile("fragmentShaderSource.glsl");
 	GLchar const* fragmentShaderSource = str.c_str();
@@ -147,7 +147,7 @@ int main(){
 			std::cout << "\nFragment Shader successfully compiled\n";
 	}
 
-/*	================================================================== 
+/*	==================================================================
 *	Fragment Shader end }}} */
 
 /*	Shader Program                                                            {{{
@@ -174,7 +174,7 @@ int main(){
 			std::cout << "\nShader Program successfully compiled\n";
 	}
 
-/*	================================================================== 
+/*	==================================================================
 *	Shader Program end }}} */
 
 	// Delete shader objects after being linked
@@ -216,7 +216,7 @@ int main(){
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 	}
-/*	================================================================== 
+/*	==================================================================
 *	Render Loop End }}} */
 
     // Deallocate resources
@@ -243,7 +243,7 @@ std::string readTextFile(const char* filename){ //                           {{{
 		}
 
 		std::cout << "####################\n" << filename << " Content:" << std::endl;
-		
+
 		while(std::getline(file, str)){
 				file_contents += str;
 				file_contents.push_back('\n');
@@ -263,7 +263,7 @@ void processInput(GLFWwindow *window){ //                                    {{{
 		}
 } //}}}
 
-// error callback 
+// error callback
 // --------------
 void glfw_error(int error, const char* description){ //                      {{{
 	fputs(description, stderr);
