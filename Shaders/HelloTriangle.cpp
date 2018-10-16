@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 800
@@ -188,8 +189,12 @@ int main(){
 	glEnableVertexAttribArray(0);
 
     // Safely unbind VBO as array buffer & unbind VAO (optional)
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindVertexArray(0);
+
+	// render triangle
+	// ---------------
+	glBindVertexArray(VAO);
 
 
 /*	RENDER LOOP                                                               {{{
@@ -205,14 +210,28 @@ int main(){
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
+
 			// use shader program
 			// ------------------
 			glUseProgram(shaderProgram);
-            glBindVertexArray(VAO);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+			// set uniform vector
+			// ------------------
+			float time_value = glfwGetTime();
+			float green_value = sin(time_value) / 2.0f + 0.5f;
+
+			std::cout << "Green value: " << green_value << std::endl;
+
+			// find index of uniform my_color
+			int vertex_color_location = glGetUniformLocation(shaderProgram, "my_color");
+
+			// set uniform
+			glUniform4f(vertex_color_location, 0.0f, green_value, 0.0f, 1.0f);
+
 
 			// glfw:	draw buffer and poll IO events
 			// ---------------------------------------
+            glDrawArrays(GL_TRIANGLES, 0, 3);
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 	}
@@ -232,6 +251,8 @@ int main(){
 	return 0;
 }
 
+// output text from filename as string
+// -----------------------------------
 std::string readTextFile(const char* filename){ //                           {{{
 		std::ifstream file(filename);
 		std::string str;
